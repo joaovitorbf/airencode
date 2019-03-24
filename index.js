@@ -1,3 +1,8 @@
+//-----------
+// Utility functions
+//-----------
+
+// Convert text string to binary string
 function textToBin(text) {
     var length = text.length,
         output = [];
@@ -12,7 +17,14 @@ function textToBin(text) {
     return output.join("=");
 }
 
+// Play the shound of a character
+// 0 and 1 are for the binary numbers
+// - is the digit separator
+// = is the letter separator
+// S, Y and N are offset sync characters
 function playChar(char, src, callback){
+
+    // maybe change these elifs to switch?
     if (char == "1"){
         src.frequency.value = 850;
         src.start("+0.15")
@@ -41,8 +53,9 @@ function playChar(char, src, callback){
     }
 }
 
+// Find the main frequency in the frequency data
 function calculateHertz (frequencies, options) {
-    var rate = 22050 / 1024; // defaults in audioContext.
+    var rate = 22050 / 1024;
   
     if (options) {
       if (options.rate) {
@@ -63,9 +76,15 @@ function calculateHertz (frequencies, options) {
     return maxI * rate;
   }
 
+//-----------
+// Main code
+//-----------
+
 $(document).ready(function(){
 
-    //Encoder
+    // Encoder
+
+    //Init Tone.js oscillator
     var osc = new Tone.Oscillator({
         "type" : "sine",
         "frequency" : 450,
@@ -73,10 +92,12 @@ $(document).ready(function(){
     }).toMaster();
 
 
-
+    // Start modulation
     $("#sendbtn").click(function(){
         var binCode = "-    S Y N ="+textToBin($("#txtinpt").val().toUpperCase())+"= S Y N   -";
         console.log("Modulating " + binCode)
+
+        // Loop through every character
         var cnt = 0;
         var loop = setInterval(function(){
             if (cnt < binCode.length+2){
@@ -86,53 +107,62 @@ $(document).ready(function(){
                 clearInterval(loop);
                 osc.stop()
             }
-        },100)
+        },100) // delay between characters
 
     })
 
-    //Decoder
+    // Decoder
+
+    // Request user media permissions for recording audio
     navigator.mediaDevices.getUserMedia({audio: {echoCancellation: false,
             noiseSupression: false,
-            autoGainControl:false},
+            autoGainControl:false
+        },
         video: false})
     .then(function(stream){
+
+        // Starting context and nodes
         var context = new AudioContext();
-
         var source = context.createMediaStreamSource(stream);
-        var analyzer = context.createAnalyser();
-        var processor = context.createScriptProcessor(1024, 1, 1)
+        var analyzer = context.createAnalyser(); // For frequency analysis
+        var processor = context.createScriptProcessor(1024, 1, 1) // For the audio processing ticks
 
-        var frequencies = new Float32Array(analyzer.frequencyBinCount);
+        var frequencies = new Float32Array(analyzer.frequencyBinCount); // Frequency buffer array
 
+        // Connect the microphone to the nodes
         source.connect(analyzer);
         source.connect(processor);
         processor.connect(context.destination)
 
+        // JQuery elements
         var leftEl = $("#350")
         var rightEl = $("#550")
         var read = $("#read")
         var decfield = $("#decoded")
         var freq = $("#freq")
 
+        // Aux variables
         var oldhz = 0;
-        var decoding = ""
-        var decoded = ""
-
+        var decoding = "" // current letter being decoded
+        var decoded = "" // decoded message
         var correctionOffset = 0
+        var SYNb = [] // SYN header buffer
 
-        var SYNb = []
+        // Runs code on every audio processor tick
         processor.onaudioprocess = function(e){
+
+            // Get current frequency in hertz
             analyzer.getFloatFrequencyData(frequencies);
             var hz = Math.round(calculateHertz(frequencies, {rate: 24000/1024}))+correctionOffset;
             
-
+            // Frequency range checks
             if (hz > 350 && hz < 550){
-                if (oldhz != hz){
+                if (oldhz != hz){ // Only if changed
                     decoding += "0"
                     leftEl.css("background-color", "green")
                     rightEl.css("background-color", "transparent")
                     
-                    read.html(6-decoding.length)
+                    read.html(6-decoding.length) // display countdown
                 }
             } else if (hz > 750 && hz < 950) {
                 if (oldhz != hz){
@@ -142,7 +172,7 @@ $(document).ready(function(){
                     
                     read.html(6-decoding.length)
                 }
-            } else if (hz > 1000) {
+            } else if (hz > 1000) { //letter separator
                 if (oldhz != hz){
                     if (decoding == "0"){
                         decoded += " "
@@ -151,8 +181,8 @@ $(document).ready(function(){
                         decoded += String.fromCharCode((parseInt(decoding,2)+64).toString(10))
                     }
                     decoding = ""
+
                     decfield.html(decoded)
-                    
                     read.html(8-decoding.length)
                 }
             } else {
@@ -160,15 +190,16 @@ $(document).ready(function(){
                 rightEl.css("background-color", "transparent")
             }
 
-            freq.html(hz)
-
+            // Listen for the SYN header
             if (oldhz != hz && hz>1250){
                 SYNb.push(hz);
             }
 
+            // Check if SYNb contains the SYN header
             if (SYNb[SYNb.length-3]>SYNb[SYNb.length-2] &&
                 SYNb[SYNb.length-2]>SYNb[SYNb.length-1]){
-
+                
+                // Calculate correction offset
                 correctionOffset = 0
                 correctionOffset += Math.abs(SYNb[SYNb.length-3]-1800)
                 correctionOffset += Math.abs(SYNb[SYNb.length-2]-1600)
@@ -182,11 +213,9 @@ $(document).ready(function(){
                 SYNb = []
             }
 
+            freq.html(hz)
             oldhz = hz;
 
-
         }
-
     })
-
 });
