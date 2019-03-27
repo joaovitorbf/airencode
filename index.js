@@ -108,7 +108,7 @@ $(document).ready(function(){
 
     // Start modulation
     $("#sendbtn").click(function(){
-        var binCode = "-    S Y N ="+textToBin($("#txtinpt").val().toUpperCase(), charcodes)+"= S Y N   -";
+        var binCode = "-    S Y N ="+textToBin($("#txtinpt").val(), charcodes)+"= S Y N   -";
         console.log("Modulating " + binCode)
 
         // Loop through every character
