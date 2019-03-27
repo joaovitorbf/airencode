@@ -1,0 +1,8 @@
+{
+    "sequence": "ETAOINSRHDLUCMFYWGPBVKXQJZ1234567890",
+    "specials": {
+        " ": "0",
+        "?": "101010",
+        "!": "111111"
+    }
+}

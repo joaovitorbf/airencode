@@ -3,16 +3,16 @@
 //-----------
 
 // Convert text string to binary string
-function textToBin(text) {
+function textToBin(text, charcodes) {
     var length = text.length,
         output = [];
     for (var i = 0;i < length; i++) {
-        if (text[i] == " "){
-            output.push("0")
-            continue
+        if (charcodes[text[i]]){
+            var bin = charcodes[text[i]];
+            output.push(bin.split("").join("-"));
+        } else {
+            output.push("1-0-1-0-1-0");
         }
-      var bin = (text[i].charCodeAt()-64).toString(2);
-      output.push(bin.split("").join("-"));
     } 
     return output.join("=");
 }
@@ -81,6 +81,20 @@ function calculateHertz (frequencies, options) {
 //-----------
 
 $(document).ready(function(){
+    // Load charcodes
+    var charcodes = {}
+    var codechars = {}
+    $.getJSON("charcodes.json", function(data){
+        for (var i = 0; i<data.sequence.length; i++){
+            charcodes[data.sequence[i]] = (i+1).toString(2);
+            codechars[(i+1).toString(2)] = data.sequence[i]
+        }
+        for (var key in data.specials){
+            charcodes[key] = data.specials[key]
+            codechars[data.specials[key]] = key
+        }
+        $("#sendbtn").attr("disabled", false)
+    })
 
     // Encoder
 
@@ -94,7 +108,7 @@ $(document).ready(function(){
 
     // Start modulation
     $("#sendbtn").click(function(){
-        var binCode = "-    S Y N ="+textToBin($("#txtinpt").val().toUpperCase())+"= S Y N   -";
+        var binCode = "-    S Y N ="+textToBin($("#txtinpt").val().toUpperCase(), charcodes)+"= S Y N   -";
         console.log("Modulating " + binCode)
 
         // Loop through every character
@@ -178,7 +192,9 @@ $(document).ready(function(){
                         decoded += " "
                     }
                     else {
-                        decoded += String.fromCharCode((parseInt(decoding,2)+64).toString(10))
+                        if (codechars[decoding]){
+                            decoded += codechars[decoding]
+                        }
                     }
                     decoding = ""
 
