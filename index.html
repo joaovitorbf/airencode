@@ -1,30 +1,33 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>AirEncode</title>
-        <meta charset="utf-8">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.min.js" type="text/javascript"></script>
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>
-        <script src="index.js" type="text/javascript"></script>
-    </head>
-    <body>
-        <h1>AirEncode</h1>
-        <h2>Encoder</h2>
-        <input type="text" id="txtinpt">
-        <button id="sendbtn" disabled="true">Send</button>
-        <h3>Tuning</h3>
-        <input id="speed" type="number" value="100">
-        <button id="setspeed">Set Speed</button>
-        <br>
-        <input id="offset" type="number" value="0">
-        <button id="setoffset">Set Offset</button>
-        <br>
-        <input id="syn" type="checkbox" checked=true>Enable automatic offset from SYN header
-        <h2>Decoder</h2>
-        <p id="freq"></p>
-        <p id="read"></p>
-        <p id="decoded"></p>
-        <div id="350" style="width: 10px; height: 10px; background-color:transparent; display:inline-block;"></div>
-        <div id="550" style="width: 10px; height: 10px; background-color:transparent; display:inline-block; margin-left: 3px;"></div>
-    </body>
+
+<head>
+    <title>AirEncode</title>
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.min.js" type="text/javascript"></script>
+    <script src="index.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <h1>AirEncode</h1>
+    <h2>Encoder</h2>
+    <input type="text" id="txtinpt">
+    <button id="sendbtn" disabled="true">Send</button>
+    <h3>Tuning</h3>
+    <input id="speed" type="number" value="100">
+    <button id="setspeed">Set Speed</button>
+    <br>
+    <input id="offset" type="number" value="0">
+    <button id="setoffset">Set Offset</button>
+    <br>
+    <input id="syn" type="checkbox" checked=true>Enable automatic offset from SYN header
+    <h2>Decoder</h2>
+    <p id="freq"></p>
+    <p id="read"></p>
+    <p id="decoded"></p>
+    <div id="350" style="width: 10px; height: 10px; background-color:transparent; display:inline-block;"></div>
+    <div id="550"
+        style="width: 10px; height: 10px; background-color:transparent; display:inline-block; margin-left: 3px;"></div>
+</body>
+
 </html>
