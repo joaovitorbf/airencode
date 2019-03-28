@@ -130,6 +130,13 @@ ready(function () {
     }).toMaster()
 
 
+    // Modulation speed options
+    var modspeed = 100
+    var speedspin = document.getElementById("speed")
+    document.getElementById("setspeed").onclick = function () {
+        modspeed = parseInt(speedspin.value)
+    }
+
     // Start modulation
     document.getElementById("sendbtn").onclick = function () {
         var binCode = "-    S Y N =" + textToBin(document.getElementById("txtinpt").value, charcodes) + "= S Y N   -"
@@ -145,7 +152,7 @@ ready(function () {
                 clearInterval(loop)
                 osc.stop()
             }
-        }, 100) // delay between characters
+        }, modspeed) // delay between characters
     }
 
     // Decoder
@@ -174,12 +181,15 @@ ready(function () {
             source.connect(processor)
             processor.connect(context.destination)
 
-            // JQuery elements
+            // DOM elements
             var leftEl = document.getElementById("350")
             var rightEl = document.getElementById("550")
             var read = document.getElementById("read")
             var decfield = document.getElementById("decoded")
             var freq = document.getElementById("freq")
+            var syncheck = document.getElementById("syn")
+            var offsetspin = document.getElementById("offset")
+            var setoffset = document.getElementById("setoffset")
 
             // Aux variables
             var oldhz = 0
@@ -188,32 +198,37 @@ ready(function () {
             var correctionOffset = 0
             var SYNb = [] // SYN header buffer
 
+            setoffset.onclick = function () {
+                correctionOffset = parseInt(offsetspin.value)
+            }
+
             // Runs code on every audio processor tick
             processor.onaudioprocess = function (e) {
 
                 // Get current frequency in hertz
                 analyzer.getFloatFrequencyData(frequencies)
-                var hz = Math.round(calculateHertz(frequencies, { rate: 24000 / 1024 })) + correctionOffset
+                var hz = Math.round(calculateHertz(frequencies, { rate: 24000 / 1024 }))
+                var hzc = hz + correctionOffset
 
                 // Frequency range checks
-                if (hz > 350 && hz < 550) {
-                    if (oldhz != hz) { // Only if changed
+                if (hzc > 350 && hzc < 550) {
+                    if (oldhz != hzc) { // Only if changed
                         decoding += "0"
                         leftEl.style.backgroundColor = "green"
                         rightEl.style.backgroundColor = "transparent"
 
                         read.innerHTML = 8 - decoding.length  // display countdown
                     }
-                } else if (hz > 750 && hz < 950) {
-                    if (oldhz != hz) {
+                } else if (hzc > 750 && hzc < 950) {
+                    if (oldhz != hzc) {
                         decoding += "1"
                         rightEl.style.backgroundColor = "green"
                         leftEl.style.backgroundColor = "transparent"
 
                         read.innerHTML = 8 - decoding.length
                     }
-                } else if (hz > 1000) { //letter separator
-                    if (oldhz != hz) {
+                } else if (hzc > 1000) { //letter separator
+                    if (oldhz != hzc) {
                         if (decoding == "0") {
                             decoded += " "
                         }
@@ -233,13 +248,14 @@ ready(function () {
                 }
 
                 // Listen for the SYN header
-                if (oldhz != hz && hz > 1250) {
+                if (oldhz != hzc && hz > 1250 + correctionOffset) {
                     SYNb.push(hz)
                 }
 
                 // Check if SYNb contains the SYN header
                 if (SYNb[SYNb.length - 3] > SYNb[SYNb.length - 2] &&
-                    SYNb[SYNb.length - 2] > SYNb[SYNb.length - 1]) {
+                    SYNb[SYNb.length - 2] > SYNb[SYNb.length - 1] &&
+                    syncheck.checked == true) {
 
                     // Calculate correction offset
                     correctionOffset = 0
@@ -252,11 +268,13 @@ ready(function () {
                     console.log("SYN detected")
                     console.log("correction offset " + correctionOffset)
 
+                    offsetspin.value = correctionOffset
+
                     SYNb = []
                 }
 
-                hz ? freq.innerHTML = hz : freq.innerHTML = 0
-                oldhz = hz
+                hzc ? freq.innerHTML = hzc : freq.innerHTML = 0
+                oldhz = hzc
 
             }
         })
